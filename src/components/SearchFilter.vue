@@ -13,7 +13,7 @@
     hide-details
     label="Movie"
     solo-inverted
-    @update:search-input="loadItems">
+    @update:search-input="updated">
     <template v-slot:item="{ item }">
       <v-list-item-avatar
         color="indigo"
@@ -36,7 +36,7 @@
 
 <script>
   import axios from "axios"
-  import debounce from "lodash/debounce"
+  import throttle from "lodash/throttle"
 
   import genreMap from '../utils/genres'
 
@@ -53,7 +53,8 @@
         query: "",
         loading: false,
         items: [], 
-        error: false
+        error: false,
+        lastSearch: null
       }
     },
     
@@ -69,6 +70,12 @@
     },
 
     methods: {
+      updated() {
+        if (this.query !== this.lastSearch) {
+          this.loadItems()
+        }
+      },
+
       getSubtitle (genres) {
         if (!genres || genres.length === 0) {
           return "-"
@@ -81,13 +88,14 @@
         return subtitle
       },
 
-      loadItems: debounce(function () {
+      loadItems: throttle(function () {
         if (!this.query || this.query.trim ()=== "") {
           return
         }
         
         this.loading = true
         this.error = false
+        this.lastSearch = this.query
 
         axios.get(`${process.env.VUE_APP_API_ENDPOINT}api/search/movie`, {
           params: {

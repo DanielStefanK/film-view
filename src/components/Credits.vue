@@ -28,7 +28,7 @@
               </template>
               <v-card light>
                 <div class="d-flex align-start justify-space-between">
-                  <v-avatar v-on="on">
+                  <v-avatar>
                     <v-img
                       v-if="actor.profile_path"
                       :src="pictureUrl(actor.profile_path)"/>
@@ -68,6 +68,10 @@
 
   export default {
     props: {
+      value: {
+        type: Object,
+        default: null
+      },
       movieId: {
         type: Number,
         default: null
@@ -80,6 +84,17 @@
         cast: null,
         loading: false,
         error: false
+      }
+    },
+
+    computed: {
+      credits: {
+        get () {
+          return this.value
+        },
+        set (newVal) {
+          this.$emit('input', newVal)
+        }
       }
     },
 
@@ -101,6 +116,7 @@
         this.error = false
         axios.get(`${process.env.VUE_APP_API_ENDPOINT}api/movie/credits/${this.movieId}`).then((response)=> {
           if (response.data.success) {
+            this.credits = response.data.result
             this.crew = response.data.result.crew
             this.cast = response.data.result.cast
           }else {
